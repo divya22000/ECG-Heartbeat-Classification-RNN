@@ -8,9 +8,75 @@ from sklearn.metrics import classification_report, confusion_matrix, ConfusionMa
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import SimpleRNN, Dense, Input
-from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import Callback
 
 np.random.seed(42)
+
+
+class EarlyStopping(Callback):
+    """Stop training when a monitored metric stops improving."""
+
+    def __init__(self, monitor="val_loss", min_delta=0, patience=0,
+                 mode="auto", baseline=None, restore_best_weights=False,
+                 start_from_epoch=0, **kwargs):
+        super().__init__(**kwargs)
+        if patience < 0:
+            raise ValueError("patience must be non-negative")
+        if mode not in ("auto", "min", "max"):
+            raise ValueError("mode must be 'auto', 'min', or 'max'")
+
+        self.monitor = monitor
+        self.min_delta = abs(min_delta)
+        self.patience = patience
+        self.mode = mode
+        self.baseline = baseline
+        self.restore_best_weights = restore_best_weights
+        self.start_from_epoch = start_from_epoch
+        self.wait = 0
+        self.stopped_epoch = 0
+        self.best_weights = None
+
+        maximize = mode == "max" or (
+            mode == "auto" and any(name in monitor.lower()
+                                    for name in ("acc", "accuracy", "auc"))
+        )
+        self.best = (-np.inf if maximize else np.inf) if baseline is None else baseline
+        self._is_improvement = (
+            (lambda value, best: value > best + self.min_delta)
+            if maximize else
+            (lambda value, best: value < best - self.min_delta)
+        )
+
+    def on_train_begin(self, logs=None):
+        self.wait = 0
+        self.stopped_epoch = 0
+        self.best_weights = None
+
+    def on_epoch_end(self, epoch, logs=None):
+        logs = logs or {}
+        if epoch < self.start_from_epoch:
+            return
+
+        current = logs.get(self.monitor)
+        if current is None or not np.isfinite(current):
+            return
+
+        if self._is_improvement(current, self.best):
+            self.best = current
+            self.wait = 0
+            if self.restore_best_weights:
+                self.best_weights = self.model.get_weights()
+        else:
+            self.wait += 1
+            if self.wait > self.patience:
+                self.stopped_epoch = epoch + 1
+                self.model.stop_training = True
+
+    def on_train_end(self, logs=None):
+        if self.restore_best_weights and self.best_weights is not None:
+            self.model.set_weights(self.best_weights)
+        if self.stopped_epoch:
+            print(f"\nEarly stopping at epoch {self.stopped_epoch}")
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "data")
