@@ -1,1 +1,113 @@
+# Model Architecture
 
+## 1. Model Overview
+
+The project uses a Recurrent Neural Network (RNN) to classify ECG heartbeat signals.
+
+The model receives a sequence of 187 ECG values and predicts one of five heartbeat classes.
+
+## 2. Input Layer
+
+The input shape of the model is:
+
+(187, 1)
+
+187 represents the number of ECG signal values.
+
+1 represents the ECG feature at each time step.
+
+## 3. RNN Layer
+
+The RNN processes the ECG sequence step by step.
+
+It learns patterns and relationships between consecutive ECG signal values.
+
+The recurrent layer helps the model capture temporal information from the heartbeat signal.
+
+## 4. Dropout Layer
+
+A dropout layer is used to reduce overfitting.
+
+During training, some neurons are randomly ignored so that the model does not depend too heavily on specific features.
+
+## 5. Dense Layer
+
+The extracted features from the RNN are passed to a fully connected dense layer.
+
+This layer learns higher-level patterns that are useful for distinguishing between heartbeat classes.
+
+## 6. Output Layer
+
+The final layer contains five output units.
+
+Each output corresponds to one heartbeat class:
+
+0 - Normal
+
+1 - Supraventricular ectopic beat
+
+2 - Ventricular ectopic beat
+
+3 - Fusion beat
+
+4 - Unknown beat
+
+A softmax activation function is used to convert the outputs into class probabilities.
+
+## 7. Model Flow
+
+ECG Signal
+
+   ↓
+
+Input Layer
+
+   ↓
+
+RNN Layer
+
+   ↓
+
+Dropout
+
+   ↓
+
+Dense Layer
+
+   ↓
+
+Output Layer
+
+   ↓
+
+Heartbeat Class
+
+## 8. Loss Function
+
+Categorical cross-entropy is used as the loss function for multi-class classification.
+
+The loss measures the difference between the actual heartbeat class and the class predicted by the model.
+
+## 9. Optimizer
+
+The Adam optimizer is used to update the model weights during training.
+
+Adam provides adaptive learning rates and is commonly used for training neural networks.
+
+## 10. Model Prediction
+
+For each ECG heartbeat, the model produces probabilities for all five classes.
+
+The class with the highest probability is selected as the predicted heartbeat class.
+
+## 11. Model Evaluation
+
+The model is evaluated using:
+
+- Accuracy
+- Precision
+- Recall
+- F1-score
+- Confusion matrix
+
+These metrics help evaluate performance across all heartbeat classes, especially the minority classes.
